@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalendarz Wydarzeń</title>
+    {% load static %}
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css' rel='stylesheet' />
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container" aria-live="polite" aria-busy="false">
+        <h1 class="text-center my-4">Kalendarz Wydarzeń</h1>
+        <div id="calendar" aria-label="Kalendarz wydarzeń"></div>
+        <div id="event-details" class="event-details" aria-labelledby="event-title" style="display:none;">
+            <h2 id="event-title"></h2>
+            <img id="event-image" class="event-image" src="https://rekrutacja.teamwsuws.pl{{ event.image_url }}" alt="Obraz wydarzenia" style="display:none;" />
+            <p><span class="label">Miejsce:</span> <span id="event-location"></span></p>
+            <p><span class="label">Data rozpoczęcia:</span> <span id="event-start-time"></span></p>
+            <p><span class="label">Krótki opis:</span> <span id="event-description"></span></p>
+            <p><span class="label">Pełny opis:</span> <span id="event-long-description"></span></p>
+            <p><span class="label">Tagi:</span> <span id="event-tags"></span></p>
+            <p><span class="label">Rejestracja:</span> <a id="event-link" href="#" target="_blank" rel="noopener noreferrer"></a></p>
+        </div>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var selectedTag = null;
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    let url = '/proxy/events/';
+                    if (selectedTag) {
+                        url = `/proxy/events/filter/?tag=${selectedTag}`;
+                    }
+
+                    fetch(url, {
+                        method: 'GET',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const events = data.map(event => ({
+                            id: event.id,
+                            title: event.name,
+                            start: event.start_time,
+                            end: event.start_time
+                        }));
+                        successCallback(events);
+                    })
+                    .catch(error => {
+                        failureCallback(error);
+                        alert('Błąd podczas pobierania wydarzeń!');
+                    });
+                },
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+
+                    const eventId = info.event.id;
+                    if (!eventId) {
+                        alert('ID wydarzenia jest nieprawidłowe!');
+                        return;
+                    }
+
+                    fetch(`/proxy/events/${eventId}/`)
+                    .then(response => response.json())
+                    .then(event => {
+                        document.getElementById("event-title").textContent = event.name;
+                        document.getElementById("event-location").textContent = event.location;
+                        document.getElementById("event-start-time").textContent = event.start_time;
+                        document.getElementById("event-description").textContent = event.short_description;
+                        document.getElementById("event-long-description").textContent = event.long_description;
+                        if (event.image_url) {
+                            let fullImageUrl = event.image_url.startsWith('https://') ? event.image_url : `https://rekrutacja.teamwsuws.pl${event.image_url}`;                            
+                            document.getElementById("event-image").src = fullImageUrl;
+                            document.getElementById("event-image").style.display = "block";
+                            document.getElementById("event-image").alt = "Obraz wydarzenia " + event.name;
+                        } else {
+                            document.getElementById("event-image").style.display = "none";
+                        }
+
+
+                        const tagList = event.tags.map(tag => `<span class="tag ${selectedTag === tag.name ? 'selected' : ''}" data-tag="${tag.name}">${tag.name}</span>`).join(' ');
+                        document.getElementById("event-tags").innerHTML = tagList;
+
+                        const eventLink = document.getElementById("event-link");
+                        if (event.registration_link) {
+                            eventLink.href = event.registration_link;
+                            eventLink.textContent = "Zarejestruj się tutaj";
+                            eventLink.style.display = "inline";
+                        } else {
+                            eventLink.style.display = "none";
+                        }
+                        document.getElementById("event-details").style.display = "block";
+
+                        document.querySelectorAll('.tag').forEach(tagElement => {
+                            tagElement.addEventListener('click', function() {
+                                const clickedTag = tagElement.getAttribute('data-tag');
+
+                                if (selectedTag === clickedTag) {
+                                    selectedTag = null;
+                                    document.querySelectorAll('.tag').forEach(el => el.classList.remove('selected'));
+                                } else {
+                                    selectedTag = clickedTag;
+                                    document.querySelectorAll('.tag').forEach(el => el.classList.remove('selected'));
+                                    tagElement.classList.add('selected');
+                                }
+
+                                calendar.refetchEvents();
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        alert('Błąd podczas pobierania szczegółów wydarzenia!');
+                    });
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+</body>
+</html>

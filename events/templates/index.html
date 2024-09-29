@@ -1,0 +1,10 @@
+<h1>Kalendarz wydarzeń</h1>
+
+<ul>
+  {% for event in events %}
+    <li>
+      <a href="{% url 'event_detail' event.id %}">{{ event.name }}</a>
+      - {{ event.start_time }}
+    </li>
+  {% endfor %}
+</ul>

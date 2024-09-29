@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szczegóły Wydarzenia</title>
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="event-container" aria-live="polite" aria-busy="false">
+        <h1>{{ event.name }}</h1>
+        <img id="event-image" class="event-image" src="https://rekrutacja.teamwsuws.pl{{ event.image_url }}" alt="Obraz wydarzenia" style="display:none;" />
+        <p><strong>Data rozpoczęcia:</strong> {{ event.start_time }}</p>
+        <p><strong>Lokalizacja:</strong> {{ event.location }}</p>
+        <p><strong>Krótki opis:</strong> {{ event.short_description }}</p>
+        <p><strong>Pełny opis:</strong> {{ event.long_description }}</p>
+        <div class="event-tags">
+            <strong>Tagi:</strong>
+            {% for tag in event.tags %}
+                <span class="tag" data-tag="{{ tag.name }}" tabindex="0">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+
+        <!-- Link rejestracyjny -->
+        <div class="event-link">
+            <strong>Rejestracja:</strong> 
+            <a href="{{ event.registration_link }}" target="_blank" rel="noopener noreferrer">
+                Zarejestruj się tutaj
+            </a>
+        </div>
+    </div>
+</body>
+</html>
