@@ -13,7 +13,7 @@ Aby uruchomić ten projekt, potrzebne są następujące narzędzia:
 
 1. Sklonuj repozytorium:
     ```bash
-    git clone [https://github.com/Sebast1anG/event_calendar](https://github.com/Sebast1anG/event_calendar.git)
+    git clone https://github.com/Sebast1anG/event_calendar.git
     cd event_calendar
     ```
 
